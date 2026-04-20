@@ -1,0 +1,149 @@
+---
+title: "Matching as Design: Constructing a Quasi-Experiment from Observational Data"
+subtitle: "STAT 479 — Group Project 1, Spring 2026"
+author:
+  - "Anushka Dwivedi (ADWIVEDI6@wisc.edu)"
+  - "Hyunbin Jung (HJUNG89@wisc.edu)"
+  - "Pusti Jesrani (JESRANI@wisc.edu)"
+  - "Nils Matteson (NOMATTESON@wisc.edu)"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+    theme: readable
+  pdf_document:
+    toc: true
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE,
+                      fig.align = "center", out.width = "90%")
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+```
+
+# Scientific Question
+
+> How can we use matching to approximate the design of a randomized experiment
+> when treatment is not randomly assigned?
+
+*TODO: rewrite in the context of our chosen dataset. State the binary treatment,
+the outcome, and what population we're making claims about.*
+
+## Causal estimand
+
+We target the **Average Treatment Effect (ATE)**:
+$$\tau = \mathbb{E}[Y(1) - Y(0)].$$
+
+*TODO: if we end up reporting ATT instead of ATE (common with 1:1 matching on
+the treated), update this section and say why.*
+
+# Data
+
+*TODO: describe the dataset — source, unit of observation, sample size,
+treatment definition, outcome, time period. Placeholder below uses the NSW
+job-training data from lecture.*
+
+```{r data-summary}
+analysis <- read.csv("data/derived/analysis.csv")
+knitr::kable(
+  data.frame(
+    metric = c("N", "N treated", "N control", "Outcome mean (treated)",
+               "Outcome mean (control)"),
+    value  = c(nrow(analysis),
+               sum(analysis$treat == 1),
+               sum(analysis$treat == 0),
+               round(mean(analysis$y[analysis$treat == 1]), 2),
+               round(mean(analysis$y[analysis$treat == 0]), 2))
+  ),
+  caption = "Unmatched sample summary."
+)
+```
+
+# Confounder Selection
+
+*TODO: justify each confounder with subject-matter reasoning. A variable
+belongs in the adjustment set if it plausibly affects both treatment assignment
+AND the outcome, and is measured pre-treatment. Do NOT include post-treatment
+variables or colliders.*
+
+| Covariate | Affects treatment? | Affects outcome? | Pre-treatment? | Include |
+|-----------|--------------------|------------------|----------------|---------|
+| age       | ...                | ...              | yes            | ...     |
+| education | ...                | ...              | yes            | ...     |
+| ...       |                    |                  |                |         |
+
+# Propensity Score Estimation
+
+We fit a logistic regression of treatment on the confounder set.
+
+```{r ps-overlap, fig.cap="Propensity score overlap between treated and control."}
+knitr::include_graphics("figures/overlap_density.png")
+```
+
+*TODO: comment on overlap. Are there regions of the PS distribution where one
+group is sparse? Would trimming help?*
+
+# Matched Design
+
+We use 1:1 nearest-neighbor matching with a distance structure combining
+Mahalanobis distance on the numeric confounders and the estimated propensity
+score (mirrors the lecture `approxmatch` workflow).
+
+*TODO: say why we chose this design over alternatives (1:k, full matching,
+exact-on-race, near-fine-balance). Report the matched sample size.*
+
+# Balance Diagnostics
+
+```{r balance-table}
+bal <- read.csv("tables/balance_table.csv")
+knitr::kable(bal, digits = 3,
+             caption = "Standardized mean differences before and after matching.")
+```
+
+```{r love-plot, fig.cap="Love plot: covariate imbalance before and after matching."}
+knitr::include_graphics("figures/love_plot.png")
+```
+
+*TODO: interpret. Conventional threshold is |SMD| < 0.1 after matching. If any
+covariates fail, discuss what that means for identification.*
+
+# Treatment Effect Estimate
+
+```{r ate}
+ate <- read.csv("tables/ate_estimate.csv")
+knitr::kable(ate, digits = 3, caption = "ATE estimate on the matched sample.")
+```
+
+*TODO: interpret in the units of the outcome. State the 95% CI and what the
+estimate does and does not imply.*
+
+# Identification Assumptions
+
+For the matched ATE to have a causal interpretation we need:
+
+1. **SUTVA** — no interference, single version of treatment.
+2. **Conditional ignorability** — $\{Y(0), Y(1)\} \perp Z \mid X$ for the
+   confounders we matched on. This is the strong, untestable assumption.
+3. **Positivity / overlap** — $0 < P(Z=1 \mid X) < 1$ for all $X$ in the
+   support. We assessed this with the overlap plot above.
+
+*TODO: for each, say specifically how plausible it is in our setting and which
+unmeasured confounders would threaten (2).*
+
+# Limitations
+
+*TODO:*
+- *Unmeasured confounding the balance diagnostics cannot detect.*
+- *Extrapolation outside the region of common support.*
+- *Sensitivity of the estimate to the matching design (Mahalanobis weights,
+  exact-on-X choices, caliper).*
+- *Dataset-specific caveats (measurement error, self-selection, sample
+  restrictions).*
+
+# References
+
+*TODO: Rosenbaum (2002, 2010); Stuart (2010); Lalonde (1986) if using NSW;
+course lecture notes weeks 5–7.*

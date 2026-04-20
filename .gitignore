@@ -1,0 +1,41 @@
+# Course materials (not ours to redistribute)
+course_files_export/
+course_files_export.zip
+*.zip
+
+# R
+.Rhistory
+.Rapp.history
+.RData
+.Ruserdata
+.Rproj.user/
+*.Rproj
+
+# renv
+renv/library/
+renv/local/
+renv/cellar/
+renv/lock/
+renv/python/
+renv/staging/
+
+# Knit / report outputs
+report/*.html
+report/*.pdf
+report/*_files/
+report/*_cache/
+
+# Generated analysis outputs (regenerate from scripts)
+figures/*.png
+figures/*.pdf
+tables/*.csv
+!figures/.gitkeep
+!tables/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/

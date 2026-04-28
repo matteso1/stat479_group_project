@@ -29,6 +29,7 @@ report/*_cache/
 figures/*.png
 figures/*.pdf
 tables/*.csv
+data/derived/
 !figures/.gitkeep
 !tables/.gitkeep
 

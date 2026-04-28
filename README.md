@@ -29,7 +29,7 @@ mimics a randomized experiment:
 
 ```
 data/
-  raw/            raw datasets (nswdata_clean.csv is a placeholder)
+  raw/            raw datasets (Cattaneo cattaneo2.csv is fetched on first run)
   derived/        outputs of 01_load.R and 02_propensity.R (gitignored contents)
 R/
   01_load.R       load + clean, define treat / y / confounders
@@ -50,13 +50,15 @@ From the project root in R:
 
 ```r
 # one-time package install
-install.packages(c("dplyr", "ggplot2", "optmatch", "rmarkdown", "rprojroot"))
-# approxmatch follows the lecture install
+install.packages(c("dplyr", "ggplot2", "optmatch", "rmarkdown",
+                   "rprojroot", "causaldata", "drat", "rlemon",
+                   "approxmatch"))
+# rrelaxiv lives outside CRAN
+options(repos = c(CRAN = "https://cloud.r-project.org"))
 drat::addRepo("rrelaxiv", "https://errickson.net/rrelaxiv")
 install.packages("rrelaxiv")
-install.packages("approxmatch")
 
-# end-to-end pipeline
+# end-to-end pipeline (downloads NHEFS to data/raw/ on first run)
 source("R/run_all.R")
 
 # knit the report
@@ -65,10 +67,23 @@ rmarkdown::render("report/report.Rmd")
 
 ## Dataset
 
-Currently using `data/raw/nswdata_clean.csv` (the NSW/Lalonde job-training data
-from lecture) as a **placeholder**. When the instructor hands us the real
-dataset, drop it in `data/raw/` and update the CONFIG block at the top of
-`R/01_load.R`. See `data/README.md`.
+We use the **NHEFS** (NHANES I Epidemiologic Follow-up Study) public-use
+dataset — the canonical observational dataset in Hernán & Robins, *Causal
+Inference: What If*. Treatment = `qsmk` (1 if respondent quit smoking between
+1971 and 1982); outcome = `wt82_71` (weight change in kg over the same
+window). The data ships in the `causaldata` R package as `nhefs_complete`;
+`R/01_load.R` snapshots it to `data/raw/nhefs.csv` on first run. See
+`data/README.md` for variable descriptions and how to swap in a different
+dataset.
+
+## A note on `approxmatch`
+
+The CRAN release of `approxmatch` (v2.0, 2017) calls a Fortran routine that
+moved out of `optmatch`, so it errors on modern systems. The course's lecture
+materials ship an unreleased newer version that supports `rlemon` /
+`rrelaxiv` solvers. We vendor those R files into `R/approxmatch/` and source
+them at the top of `R/03_match.R`, exactly as `lecture10_rdemonstration.R`
+does. License is MIT; see `R/approxmatch/LICENSE`.
 
 ## Course materials
 

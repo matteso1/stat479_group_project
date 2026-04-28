@@ -11,7 +11,17 @@
 suppressPackageStartupMessages({
   library(optmatch)
   library(approxmatch)
+  library(rlemon)
 })
+
+# Override the CRAN release of approxmatch with the unreleased source the
+# course ships, which exposes a `solver` argument compatible with current
+# optmatch (the CRAN release tries to call a Fortran routine that no longer
+# lives in optmatch). Same pattern as lecture10_rdemonstration.R.
+for (f in c("multigrp_dist_struc.R", "kwaymatching.R", "nrbalancematch.R",
+            "tripletmatching.R", "covbalance.R")) {
+  source(file.path("R", "approxmatch", f), local = FALSE)
+}
 
 analysis <- read.csv("data/derived/analysis_ps.csv")
 

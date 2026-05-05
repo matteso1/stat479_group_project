@@ -6,7 +6,8 @@ scripts <- c(
   "R/02_propensity.R",
   "R/03_match.R",
   "R/04_balance.R",
-  "R/05_estimate.R"
+  "R/05_estimate.R",
+  "R/06_sensitivity.R"
 )
 
 for (s in scripts) {

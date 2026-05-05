@@ -8,16 +8,14 @@
 df  <- read.csv("data/derived/analysis_ps.csv")
 res <- readRDS("data/derived/matches.rds")
 
-# res$matches is a 2-column character matrix of row indices into df.
-# Column "group_2" = treated row, column "group_1.1" = matched control row.
-pair_ids <- apply(res$matches, 2, as.integer)
-
+# res$matches stores row-name strings, not positional indices. Index by
+# row name so this stays correct even if df ever gets subsetted upstream.
 treat_col <- grep("^group_2", colnames(res$matches))
 ctrl_col  <- grep("^group_1", colnames(res$matches))
 stopifnot(length(treat_col) == 1, length(ctrl_col) == 1)
 
-y_treat <- df$y[pair_ids[, treat_col]]
-y_ctrl  <- df$y[pair_ids[, ctrl_col]]
+y_treat <- df[res$matches[, treat_col], "y"]
+y_ctrl  <- df[res$matches[, ctrl_col], "y"]
 
 diffs   <- y_treat - y_ctrl
 tau_hat <- mean(diffs)

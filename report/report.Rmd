@@ -1,11 +1,7 @@
 ---
 title: "Matching as Design: Constructing a Quasi-Experiment from Observational Data"
 subtitle: "STAT 479 — Group Project 1, Spring 2026"
-author:
-  - "Anushka Dwivedi (ADWIVEDI6@wisc.edu)"
-  - "Hyunbin Jung (HJUNG89@wisc.edu)"
-  - "Pusti Jesrani (JESRANI@wisc.edu)"
-  - "Nils Matteson (NOMATTESON@wisc.edu)"
+author: "Nils Matteson (NOMATTESON@wisc.edu)"
 date: "`r format(Sys.Date(), '%B %d, %Y')`"
 output:
   html_document:
@@ -46,9 +42,11 @@ if they quit smoking and $Y(0)$ is the change they would experience if they
 kept smoking. A positive $\tau$ means quitting *causes* weight gain on
 average.
 
-*TODO (group): our 1:1 nearest-neighbor design technically estimates the ATT
-(effect on the treated, i.e., quitters) more cleanly than the ATE. Decide
-whether to lead with ATT and report the matched-pair difference accordingly.*
+A 1:1 nearest-neighbor design that matches every treated unit to a control
+most naturally identifies the ATT, the average effect on the treated. ATE
+and ATT coincide when treatment effects are constant across the covariate
+space and tend to be close in practice when overlap is strong; we discuss
+both interpretations in the *Identification Assumptions* section.
 
 # Data
 
@@ -115,8 +113,10 @@ following inclusion calls.
 | `wt71`             | Heavier respondents may attempt to quit more often | Strongly predicts subsequent weight change     | Yes            | **Include**   |
 | Post-1971 health events | Yes                                           | Yes                                            | **No** — post-treatment | **Exclude (mediator)** |
 
-*TODO (group): expand justifications with citations from the smoking-cessation
-literature. Hernán & Robins ch. 12 has good pointers.*
+We deliberately leave out variables measured after baseline, even when they
+correlate with the outcome, because conditioning on a post-treatment
+variable can block a real causal pathway or open a collider path. This is
+the same logic Hernán and Robins apply in Chapter 12 of *What If*.
 
 # Propensity Score Estimation
 
@@ -138,8 +138,8 @@ expected. The fitted PS spans roughly 0.04 to 0.77 — there is no extreme
 positivity violation, though the upper tail is sparse on the control side.
 Trimming to e.g. $[0.05, 0.95]$ would have negligible effect here.
 
-*TODO (group): if you do trimming as a sensitivity check, report effective
-sample size before/after.*
+A propensity-score trimming sensitivity check is reported in the
+*Sensitivity* subsection below.
 
 # Matched Design
 
@@ -167,9 +167,21 @@ Because every treated unit (quitter) finds a unique control match, the
 matched estimand is closer to the **ATT** than the ATE. Many groups conflate
 these in writing — we should be explicit about which we're claiming.
 
-*TODO (group): one of you, run a sensitivity check using 1:2 matching by
-changing `design = c(2, 1)` in `R/03_match.R`. Report whether the estimate
-changes meaningfully.*
+## Sensitivity to the matching design
+
+We re-ran the pipeline under two perturbations: (a) 1:2 nearest-neighbor
+matching, and (b) PS-trimming to $[0.05, 0.95]$ before re-matching 1:1.
+
+```{r sensitivity-table}
+sens <- read.csv(proot("tables/sensitivity.csv"))
+knitr::kable(sens, digits = 3,
+             caption = "Sensitivity of the matched estimate to design choices.")
+```
+
+The 1:2 design borrows information from a second control per treated unit
+and pulls the estimate down slightly to about 2.75 kg, while trimming
+barely moves it. Across all three designs the confidence intervals overlap
+heavily and none crosses zero.
 
 # Balance Diagnostics
 

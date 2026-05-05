@@ -10,7 +10,6 @@
 
 suppressPackageStartupMessages({
   library(optmatch)
-  library(approxmatch)
   library(rlemon)
 })
 
@@ -48,9 +47,9 @@ dist_str <- multigrp_dist_struc(
   wgts       = wgts
 )
 
-# 1:1 nearest-neighbor matching. Index group = smaller group (treated = 2).
+# 1:2 nearest-neighbor matching. Index group = smaller group (treated = 2).
 indexgroup <- 2L
-design     <- c(1, 1)
+design     <- c(2, 1)
 
 res <- kwaymatching(
   distmat    = dist_str,

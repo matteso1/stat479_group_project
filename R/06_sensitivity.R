@@ -12,7 +12,6 @@
 
 suppressPackageStartupMessages({
   library(optmatch)
-  library(approxmatch)
   library(rlemon)
 })
 
@@ -70,18 +69,18 @@ num_conf    <- confounders[sapply(ana[confounders], is.numeric)]
 
 results <- list()
 
-# --- (a) 1:2 nearest-neighbor matching -------------------------------------
+# --- (a) 1:1 nearest-neighbor matching -------------------------------------
 
 dist_a <- build_dist(ana, num_conf)
 res_a  <- kwaymatching(
   distmat    = dist_a,
   grouplabel = "group",
   indexgroup = 2L,
-  design     = c(2, 1),    # 2 controls per treated
+  design     = c(1, 1),    # 1 control per treated
   .data      = ana
 )
 est_a  <- paired_estimate(res_a$matches, ana)
-results[["1:2 NN matching"]] <- est_a
+results[["1:1 NN matching"]] <- est_a
 
 # --- (b) PS-trimmed 1:1 matching -------------------------------------------
 
@@ -106,7 +105,7 @@ results[[sprintf("1:1 NN, PS trimmed [%.2f, %.2f]", trim_lo, trim_hi)]] <- est_b
 
 primary <- read.csv("tables/ate_estimate.csv")
 primary_row <- data.frame(
-  design      = "1:1 NN matching (primary)",
+  design      = "1:2 NN matching (primary)",
   estimate_kg = primary$estimate,
   se_kg       = primary$paired_se,
   ci_lower    = primary$ci_lower_95,

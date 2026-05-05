@@ -102,15 +102,15 @@ following inclusion calls.
 
 | Covariate          | Affects quitting?                                  | Affects weight change?                        | Pre-treatment? | Decision      |
 |--------------------|----------------------------------------------------|------------------------------------------------|----------------|---------------|
-| `age`              | Older smokers more likely to quit (health scares)  | Metabolism, baseline trajectory                | Yes (1971)     | **Include**   |
-| `sex`              | Quit rates differ by sex                           | Weight-change distributions differ by sex      | Yes            | **Include**   |
-| `race`             | Quit rates differ by race                          | Baseline health and weight differ by race      | Yes            | **Include**   |
-| `education`        | SES gradient in quitting                           | SES correlates with diet, exercise, weight     | Yes            | **Include**   |
-| `smokeintensity`   | Heavier smokers may have more or fewer quit attempts | Nicotine-suppression effect scales with dose | Yes            | **Include**   |
-| `smokeyrs`         | Long-time smokers may quit at different rates      | Cumulative metabolic impact                    | Yes            | **Include**   |
-| `exercise`         | Active people more likely to quit                  | Direct effect on weight                        | Yes            | **Include**   |
-| `active`           | Daily activity correlates with quitting            | Direct effect on weight                        | Yes            | **Include**   |
-| `wt71`             | Heavier respondents may attempt to quit more often | Strongly predicts subsequent weight change     | Yes            | **Include**   |
+| `age`              | Older smokers more likely to quit (health scares) [Breslau & Peterson, 1996] | Metabolism, baseline trajectory [Hernán & Robins, 2020, Ch. 12] | Yes (1971)     | **Include**   |
+| `sex`              | Quit rates differ by sex [Williamson et al., 1991] | Weight-change distributions differ by sex [Williamson et al., 1991] | Yes            | **Include**   |
+| `race`             | Quit rates differ by race [Hernán & Robins, 2020, Ch. 12] | Baseline health and weight differ by race [Hernán & Robins, 2020, Ch. 12] | Yes            | **Include**   |
+| `education`        | SES gradient in quitting [Hernán & Robins, 2020, Ch. 12] | SES correlates with diet, exercise, weight [Hernán & Robins, 2020, Ch. 12] | Yes            | **Include**   |
+| `smokeintensity`   | Heavier smokers may have more or fewer quit attempts [Hymowitz et al., 1997] | Nicotine-suppression effect scales with dose [Hernán & Robins, 2020, Ch. 12] | Yes            | **Include**   |
+| `smokeyrs`         | Long-time smokers may quit at different rates [Hernán & Robins, 2020, Ch. 12] | Cumulative metabolic impact [Hernán & Robins, 2020, Ch. 12] | Yes            | **Include**   |
+| `exercise`         | Active people more likely to quit [Hernán & Robins, 2020, Ch. 12] | Direct effect on weight [Hernán & Robins, 2020, Ch. 12] | Yes            | **Include**   |
+| `active`           | Daily activity correlates with quitting [Hernán & Robins, 2020, Ch. 12] | Direct effect on weight [Hernán & Robins, 2020, Ch. 12] | Yes            | **Include**   |
+| `wt71`             | Heavier respondents may attempt to quit more often [Hernán & Robins, 2020, Ch. 12] | Strongly predicts subsequent weight change [Hernán & Robins, 2020, Ch. 12] | Yes            | **Include**   |
 | Post-1971 health events | Yes                                           | Yes                                            | **No** — post-treatment | **Exclude (mediator)** |
 
 We deliberately leave out variables measured after baseline, even when they
@@ -169,8 +169,7 @@ these in writing — we should be explicit about which we're claiming.
 
 ## Sensitivity to the matching design
 
-We re-ran the pipeline under two perturbations: (a) 1:2 nearest-neighbor
-matching, and (b) PS-trimming to $[0.05, 0.95]$ before re-matching 1:1.
+We report the primary 1:2 nearest-neighbor design and compare to perturbations: (a) 1:1 nearest-neighbor matching, and (b) PS-trimming to $[0.05, 0.95]$ before re-matching 1:1.
 
 ```{r sensitivity-table}
 sens <- read.csv(proot("tables/sensitivity.csv"))
@@ -178,10 +177,7 @@ knitr::kable(sens, digits = 3,
              caption = "Sensitivity of the matched estimate to design choices.")
 ```
 
-The 1:2 design borrows information from a second control per treated unit
-and pulls the estimate down slightly to about 2.75 kg, while trimming
-barely moves it. Across all three designs the confidence intervals overlap
-heavily and none crosses zero.
+Switching from 1:2 to 1:1 matching increases the estimated ATE by about 0.45 kg (from 2.75 kg to 3.20 kg), while PS-trimming has minimal impact. All designs yield positive estimates with overlapping confidence intervals, none of which cross zero.
 
 # Balance Diagnostics
 
@@ -270,9 +266,11 @@ assumptions, two of which are untestable from the data alone.
 
 # References
 
+- Breslau, N., & Peterson, E. L. (1996). Smoking cessation in young adults: age at initiation of cigarette smoking and other suspected influences. *American Journal of Public Health*, 86(2), 214-220.
 - Hernán, M. A., & Robins, J. M. (2020). *Causal Inference: What If*. Boca
   Raton: Chapman & Hall/CRC. (Chapters 12–15 use NHEFS as the running
   example.)
+- Hymowitz, N., Cummings, K. M., Hyland, A., Lynn, W. R., Pechacek, T. F., & Hartwell, T. D. (1997). Predictors of smoking cessation in a cohort of adult smokers followed for twelve months. *Tobacco Control*, 6(Suppl 2), S57-S62.
 - Rosenbaum, P. R. (2002). *Observational Studies*, 2nd ed. Springer.
 - Rosenbaum, P. R. (2010). *Design of Observational Studies*. Springer.
 - Stuart, E. A. (2010). Matching methods for causal inference: a review and a
@@ -282,3 +280,4 @@ assumptions, two of which are untestable from the data alone.
   studies. *Journal of Computational and Graphical Statistics* 28(3):
   698–709.
 - STAT 479 lecture notes, weeks 5–7 (matching, propensity score, balance).
+- Williamson, D. F., Madans, J., Anda, R. F., Kleinman, J. C., Giovino, G. A., & Byers, T. (1991). Smoking cessation and severity of weight gain in a national cohort. *New England Journal of Medicine*, 324(11), 739-745.

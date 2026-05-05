@@ -11,11 +11,17 @@ res <- readRDS("data/derived/matches.rds")
 # res$matches stores row-name strings, not positional indices. Index by
 # row name so this stays correct even if df ever gets subsetted upstream.
 treat_col <- grep("^group_2", colnames(res$matches))
-ctrl_col  <- grep("^group_1", colnames(res$matches))
-stopifnot(length(treat_col) == 1, length(ctrl_col) == 1)
+ctrl_cols <- grep("^group_1", colnames(res$matches))
+stopifnot(length(treat_col) == 1, length(ctrl_cols) >= 1)
 
 y_treat <- df[res$matches[, treat_col], "y"]
-y_ctrl  <- df[res$matches[, ctrl_col], "y"]
+
+if (length(ctrl_cols) == 1) {
+  y_ctrl <- df[res$matches[, ctrl_cols], "y"]
+} else {
+  ctrl_outcomes <- sapply(ctrl_cols, function(j) df[res$matches[, j], "y"])
+  y_ctrl <- rowMeans(ctrl_outcomes)
+}
 
 diffs   <- y_treat - y_ctrl
 tau_hat <- mean(diffs)

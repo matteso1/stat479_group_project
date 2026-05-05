@@ -5,8 +5,14 @@
 #   figures/love_plot.png
 
 suppressPackageStartupMessages({
-  library(approxmatch)
+  # approxmatch functions sourced below
 })
+
+# Source approxmatch functions
+for (f in c("multigrp_dist_struc.R", "kwaymatching.R", "nrbalancematch.R",
+            "tripletmatching.R", "covbalance.R")) {
+  source(file.path("R", "approxmatch", f), local = FALSE)
+}
 
 df  <- read.csv("data/derived/analysis_ps.csv")
 res <- readRDS("data/derived/matches.rds")

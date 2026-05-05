@@ -25,6 +25,15 @@ report/*.pdf
 report/*_files/
 report/*_cache/
 
+# LaTeX build artifacts
+report/*.aux
+report/*.log
+report/*.out
+report/*.toc
+report/*.fls
+report/*.fdb_latexmk
+report/*.synctex.gz
+
 # Generated analysis outputs (regenerate from scripts)
 figures/*.png
 figures/*.pdf

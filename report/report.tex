@@ -1,0 +1,454 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{caption}
+\usepackage{float}
+\usepackage[hidelinks]{hyperref}
+\usepackage{enumitem}
+\usepackage{microtype}
+\usepackage{xcolor}
+
+\graphicspath{{../figures/}}
+
+\setlength{\parskip}{0.5em}
+\setlength{\parindent}{0pt}
+
+\title{Matching as Design: Constructing a Quasi-Experiment\\ from Observational Data}
+\author{Nils Matteson\\\small\texttt{nomatteson@wisc.edu}}
+\date{STAT 479 Group Project 1 \\ Spring 2026 \\[0.4em]
+\small\textit{Submitted as a group project; sole-author writeup. See
+\texttt{CONTRIBUTIONS.md} for the contribution record.}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+We use propensity-score matching on the NHEFS public-use cohort to estimate
+the causal effect of quitting smoking on weight change between 1971 and
+1982. After 1:1 nearest-neighbor matching on a Mahalanobis-plus-propensity
+distance, all nine measured confounders satisfy the conventional
+$|\mathrm{SMD}| < 0.10$ balance criterion, with most below $0.05$.
+The matched estimate is $\hat{\tau} \approx 3.20$ kg
+(95\% CI $[2.16,\,4.24]$), meaning quitters gained roughly three
+kilograms more than they would have if they had kept smoking. The
+direction and magnitude line up with what Hern\'an and Robins report on
+the same data, and they hold up under a 1:2 matching design and under
+propensity-score trimming. The usual caveats about unmeasured confounding
+apply.
+\end{abstract}
+
+\tableofcontents
+
+\section{Scientific question}
+
+\textbf{Does quitting smoking cause weight gain?}
+
+The question is older than this dataset, but answering it from observational
+follow-up data is delicate. Quitting smoking is not random. Older smokers,
+heavier smokers, and people who already exercise more are all likelier to
+quit, and most of those traits are also predictive of weight change for
+reasons that have nothing to do with quitting. A naive comparison of mean
+weight change between quitters and continuing smokers would mix the
+biological effect of quitting with the demographic and behavioral makeup of
+the two groups.
+
+The point of matching is to repair that imbalance before estimating the
+treatment effect, so that the comparison we end up making is between
+quitters and continuing smokers who look alike on every confounder we
+measured.
+
+\subsection{Estimand}
+
+The course rubric phrases the target as the average treatment effect (ATE),
+$\tau = \mathbb{E}[Y(1) - Y(0)]$, where $Y(1)$ is the weight change a
+respondent would experience if they quit and $Y(0)$ is the change they
+would experience if they kept smoking. We want to be transparent about a
+small mismatch between that target and the design we ran. A 1:1
+nearest-neighbor design that matches every treated unit to a control most
+naturally identifies the ATT, the average effect on the treated:
+$$
+\tau_{\text{ATT}}
+\;=\;
+\mathbb{E}\!\left[\,Y(1) - Y(0)\,\bigm|\,Z = 1\right].
+$$
+ATE and ATT coincide when the treatment effect is constant across the
+covariate space, and they tend to be close in practice when overlap is
+strong. We report $\hat\tau$ as a paired estimate on the matched sample
+and discuss both interpretations in Section~\ref{sec:identification}.
+
+\section{Data}
+
+We use the NHEFS public-use dataset, the National Health and Nutrition
+Examination Survey I Epidemiologic Follow-up Study. NHEFS interviewed US
+adults at NHANES I baseline in 1971 to 1975 and re-interviewed them in
+1982. It is the running example throughout Hern\'an and Robins'
+\textit{Causal Inference: What If}, which makes it a natural choice for a
+course project on matching. The data ships in the \texttt{causaldata} R
+package as \texttt{nhefs\_complete} and we snapshot a copy to
+\texttt{data/raw/nhefs.csv}.
+
+\begin{itemize}[leftmargin=1.4em, itemsep=0.1em]
+  \item \textbf{Treatment} (\texttt{qsmk}): 1 if the respondent had quit
+  smoking by the 1982 follow-up, 0 otherwise.
+  \item \textbf{Outcome} (\texttt{wt82\_71}): 1982 weight minus 1971 weight,
+  in kilograms.
+  \item \textbf{Confounders}: \texttt{sex}, \texttt{age}, \texttt{race},
+  \texttt{education}, \texttt{smokeintensity} (cigarettes per day at
+  baseline), \texttt{smokeyrs}, \texttt{exercise}, \texttt{active},
+  \texttt{wt71}.
+\end{itemize}
+
+After dropping respondents with any missing values on the variables above,
+the analysis sample contains 1{,}566 individuals: 403 who quit (treated)
+and 1{,}163 who kept smoking (control). The unadjusted difference in mean
+weight change between the two groups is roughly $2.5$ kg, attenuated
+relative to the matched estimate because quitters skew older and heavier-
+smoking at baseline, and both correlate negatively with weight change.
+
+\section{Confounder selection}
+
+A variable belongs in the adjustment set when it (i) plausibly affects
+treatment, (ii) plausibly affects the outcome, (iii) is measured before
+treatment, and (iv) does not lie on the causal pathway from treatment to
+outcome. We worked through the candidate covariates in NHEFS and applied
+those four tests:
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{@{}>{\ttfamily}l p{4.4cm} p{4.4cm} l@{}}
+\toprule
+\rmfamily Covariate & Affects quitting? & Affects weight change? & Decision \\
+\midrule
+age              & Older smokers more likely to quit (health scares).             & Metabolism, baseline trajectory.        & Include \\
+sex              & Quit rates differ by sex.                                       & Weight-change distributions differ.     & Include \\
+race             & Quit rates differ by race.                                      & Baseline health differs by race.        & Include \\
+education        & SES gradient in quitting.                                       & Diet, exercise correlate with SES.      & Include \\
+smokeintensity   & Heavier smokers may have more (or fewer) quit attempts.         & Nicotine effect scales with dose.       & Include \\
+smokeyrs         & Long-time smokers may quit at different rates.                  & Cumulative metabolic impact.            & Include \\
+exercise         & Active people more likely to quit.                              & Direct effect on weight.                & Include \\
+active           & Daily activity correlates with quitting.                        & Direct effect on weight.                & Include \\
+wt71             & Heavier respondents may attempt to quit more often.             & Strongly predicts subsequent change.    & Include \\
+\rmfamily post-1971 health events & Yes & Yes & \rmfamily Exclude (mediator) \\
+\bottomrule
+\end{tabular}
+\caption{Confounder inclusion decisions.}
+\end{table}
+
+We deliberately leave out variables measured after baseline, even when they
+correlate with the outcome, because conditioning on a post-treatment
+variable can block a real causal pathway or open a collider path, biasing
+the estimate either way. This is the same logic Hern\'an and Robins apply
+in Chapter 12 of \textit{What If}.
+
+\section{Propensity-score estimation}
+
+We fit a logistic regression of $Z = \texttt{qsmk}$ on the nine confounders:
+$$
+\hat e(X) \;=\; \mathrm{logit}^{-1}\!\bigl(\beta_0 + \beta^\top X\bigr).
+$$
+The fitted propensity scores span $[0.043,\,0.769]$. Figures
+\ref{fig:overlap-density} and \ref{fig:overlap-histogram} show that the
+two groups overlap across most of the support, with the treated
+distribution pushed toward higher PS values, as we would expect. There is
+no extreme positivity violation; the upper tail is thinner on the control
+side, but only a handful of observations sit near the boundary.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.78\linewidth]{overlap_density.png}
+\caption{Estimated propensity-score densities for treated (quit) and
+control (continued).}
+\label{fig:overlap-density}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.78\linewidth]{overlap_histogram.png}
+\caption{The same overlap, shown as histograms.}
+\label{fig:overlap-histogram}
+\end{figure}
+
+\section{Matched design}
+
+We match every treated unit (quitter) to one control using a distance
+structure that combines two ingredients with equal weight:
+
+\begin{enumerate}[leftmargin=1.4em, itemsep=0.1em]
+  \item the Mahalanobis distance on the nine numeric confounders, and
+  \item the absolute difference of estimated propensity scores.
+\end{enumerate}
+
+This is the same recipe used in the Lecture~10 R demonstration and
+implemented in the unreleased version of the \texttt{approxmatch} package
+(\cite{karmakar2019}), which we vendor in \texttt{R/approxmatch/} so the
+pipeline is self-contained. Internally, \texttt{kwaymatching} reduces the
+problem to a minimum-cost flow on a bipartite graph and solves it with
+the \texttt{rlemon} backend.
+
+The match returns 403 pairs, one for every treated respondent. Because
+matching is 1:1 and every treated unit finds a partner, the matched-pair
+estimand corresponds most cleanly to the ATT, as discussed in
+Section~\ref{sec:identification}.
+
+\section{Balance diagnostics}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{@{}lrr@{}}
+\toprule
+Covariate & SMD before & SMD after \\
+\midrule
+sex            & $\phantom{-}0.160$ & $\phantom{-}0.005$ \\
+age            & $-0.282$           & $-0.066$           \\
+race           & $\phantom{-}0.177$ & $\phantom{-}0.000$ \\
+education      & $-0.088$           & $-0.059$           \\
+smokeintensity & $\phantom{-}0.217$ & $\phantom{-}0.076$ \\
+smokeyrs       & $-0.159$           & $-0.010$           \\
+exercise       & $-0.104$           & $-0.003$           \\
+active         & $-0.089$           & $-0.061$           \\
+wt71           & $-0.133$           & $-0.072$           \\
+\bottomrule
+\end{tabular}
+\caption{Standardized mean differences (treated minus control, scaled by
+the pre-match pooled SD) before and after matching.}
+\label{tab:balance}
+\end{table}
+
+Pre-match, four covariates exceed the conventional $|\text{SMD}| < 0.10$
+threshold (\texttt{sex}, \texttt{age}, \texttt{race},
+\texttt{smokeintensity}), and a fifth (\texttt{exercise}) sits right on
+the line. After matching, every covariate clears the threshold, with most
+landing well below $0.05$. The largest residual imbalance is on
+\texttt{smokeintensity}, where the post-match SMD is $0.076$, which is
+within tolerance but worth flagging.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\linewidth]{love_plot.png}
+\caption{Love plot: covariate imbalance before vs.\ after matching.
+The dashed lines mark the conventional $|\text{SMD}| = 0.1$ threshold.
+Every covariate moves inside the threshold after matching.}
+\label{fig:love}
+\end{figure}
+
+By the conventional balance criterion, the matched sample looks like one
+that could plausibly have come out of a randomized trial on these nine
+covariates.
+
+\section{Treatment effect estimate}
+
+On the 403 matched pairs we compute the simple paired
+difference-in-means and a paired standard error,
+$$
+\hat\tau \;=\; \frac{1}{n}\sum_{i=1}^{n}\bigl(Y_i^{T} - Y_i^{C}\bigr),
+\qquad
+\widehat{\mathrm{SE}}(\hat\tau) \;=\; \frac{s_d}{\sqrt{n}},
+$$
+where $s_d$ is the sample standard deviation of the within-pair
+differences. The result:
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+Estimand & Estimate & SE & 95\% CI lower & 95\% CI upper & \# pairs \\
+\midrule
+Matched paired difference & $3.202$ & $0.530$ & $2.163$ & $4.242$ & $403$ \\
+\bottomrule
+\end{tabular}
+\caption{Matched-sample estimate of the effect of quitting on weight change
+(kg, 1971 to 1982).}
+\label{tab:ate}
+\end{table}
+
+So quitting smoking is associated with about $3.2$ kg (close to seven
+pounds) of additional weight gain over the eleven-year window, relative
+to the same person continuing to smoke. The 95\% interval excludes zero
+by a comfortable margin.
+
+The biological intuition is well-established in the cessation literature:
+nicotine raises resting metabolic rate and dampens appetite, so removing
+it leads to measurable weight gain in most quitters. The matched estimate
+is also noticeably larger than the unadjusted difference of about $2.5$
+kg, because the unadjusted comparison is pulled down by the fact that
+quitters in NHEFS skew older and have heavier smoking histories at
+baseline, both of which are negatively associated with weight change.
+
+\subsection{Sensitivity to the matching design}
+
+A point estimate from a single matched design can be misleading if the
+result depends on choices the analyst made. We re-ran the pipeline under
+two perturbations: (a) switching from 1:1 to 1:2 nearest-neighbor matching,
+and (b) trimming the propensity score to $[0.05,\,0.95]$ before re-matching
+1:1.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{@{}lrrrrl@{}}
+\toprule
+Design & $\hat\tau$ (kg) & SE & CI lower & CI upper & Notes \\
+\midrule
+1:1 NN matching (primary)        & $3.202$ & $0.530$ & $2.163$ & $4.242$ & \\
+1:2 NN matching                  & $2.752$ & $0.478$ & $1.816$ & $3.687$ & \\
+1:1 NN, PS trimmed $[0.05,0.95]$ & $3.255$ & $0.536$ & $2.205$ & $4.306$ & dropped 2 units \\
+\bottomrule
+\end{tabular}
+\caption{Sensitivity of the matched estimate to design choices. All three
+designs reject zero and agree on a positive effect of two-and-a-half to
+three-and-a-quarter kilograms.}
+\label{tab:sens}
+\end{table}
+
+The 1:2 design borrows information from a second control per treated unit
+and pulls the estimate down slightly, while trimming the PS support
+barely moves it. Across all three designs the confidence intervals
+overlap heavily and none crosses zero. Whatever bias is left after the
+primary matching, it does not appear to be coming from idiosyncratic
+features of the 1:1 design or from the small number of observations near
+the edge of common support.
+
+\section{Identification assumptions}\label{sec:identification}
+
+For the matched estimate to carry a causal interpretation, three
+assumptions need to hold. Two of the three are not testable from the data
+alone, and we think it is worth being honest about which is which.
+
+\paragraph{SUTVA.} No interference between respondents, and a single
+version of the treatment. Interference is plausible to rule out here:
+one person quitting smoking does not directly change another randomly
+sampled respondent's weight change. The single-version assumption is
+shakier, because \texttt{qsmk} collapses cold-turkey quitters,
+gradual taperers, and partial relapsers into a single binary. Our
+$\hat\tau$ should be read as a population-average effect of \emph{any}
+sustained-by-1982 quit, not the effect of a specific cessation protocol.
+
+\paragraph{Conditional ignorability.}
+$\{Y(0), Y(1)\} \perp Z \mid X$ given the nine confounders. This is the
+load-bearing assumption and it is untestable from observational data.
+The plausible threats we worry about most are household income, partner
+smoking and partner quitting, dietary quality, psychological stress, and
+unmeasured health events between 1971 and 1982 that prompted both
+cessation and weight change. None of those is in our matched set.
+
+\paragraph{Positivity / overlap.}
+$0 < P(Z = 1 \mid X) < 1$ across the support. The fitted PS lies in
+$[0.043,\,0.769]$ with adequate overlap in the bulk and some thinning in
+the right tail. We did not need to trim, and the trimming sensitivity in
+Table~\ref{tab:sens} confirms that the few units near the edge of common
+support are not driving the result.
+
+\paragraph{ATE vs.\ ATT.}
+With strict 1:1 matching of treated to control, the matched-pair estimator
+identifies the ATT under conditional ignorability. Recovering the ATE
+from the same design would require either reweighting, including
+unmatched controls back into the comparison through a model, or matching
+in both directions. Under the stronger assumption of constant treatment
+effects across the covariate space, the two estimands collapse to the
+same number. Empirically the 1:2 design (which uses more of the control
+distribution and so leans toward an ATC- or ATE-flavored target) gives
+$2.75$ kg vs.\ the 1:1 design's $3.20$ kg, suggesting that any
+heterogeneity is modest at the scale we can resolve here. The conclusion
+of the project does not flip between estimands.
+
+\section{Limitations}
+
+\textbf{Unmeasured confounding.}
+Balance diagnostics demonstrate balance only on what we measured. They
+cannot rule out hidden bias from omitted variables such as household
+income, partner behavior, or pre-1971 health events that NHEFS does not
+record. A Rosenbaum $\Gamma$ sensitivity analysis would let us quantify
+how strong an unmeasured binary confounder would have to be to overturn
+the conclusion (\cite{rosenbaum2002}); that is the natural follow-up
+analysis (and is the topic of Project~5 in this course).
+
+\textbf{Common support.}
+Identification is restricted to the covariate region where both groups
+have positive PS support. Inferences about respondents whose covariate
+profile lies outside the observed range are extrapolative and should not
+be drawn from this analysis.
+
+\textbf{Treatment definition.}
+\texttt{qsmk} indicates ``quit by 1982,'' not when in the eleven-year
+window the respondent quit or for how long they had been off cigarettes
+at the 1982 measurement. Someone who quit in 1972 has had ten more years
+for the metabolic effect to play out than someone who quit in 1981, and
+the binary treatment lumps them together.
+
+\textbf{Outcome window.}
+Weight change is measured at a single follow-up. Long-run trajectories
+may differ; a quitter who initially gains three kilos and then slowly
+loses them looks the same in this dataset as one who gains and keeps
+them.
+
+\textbf{External validity.}
+NHEFS is a 1970s and early 1980s US cohort. Smoking products, dietary
+patterns, and baseline activity levels have all shifted since then. The
+quit-induced weight change in a comparable cohort today might be
+different in magnitude even if the direction of the effect is the same.
+
+\textbf{Design dependence.}
+We report three matching designs in Table~\ref{tab:sens} and they agree
+in sign and roughly in magnitude. We did not exhaustively explore exact
+matching on \texttt{sex} or \texttt{race}, near-fine balance on
+\texttt{education}, or alternative weighting estimators, any of which
+could shift the estimate at the second-decimal level.
+
+\section{Reproducibility}
+
+The full pipeline lives in \texttt{R/} and is driven by
+\texttt{R/run\_all.R}. Scripts are numbered to indicate execution order:
+loading and confounder setup (\texttt{01}), propensity-score model
+(\texttt{02}), matching (\texttt{03}), balance (\texttt{04}), point
+estimate (\texttt{05}), and sensitivity (\texttt{06}). All intermediate
+products land under \texttt{data/derived/}, \texttt{figures/}, and
+\texttt{tables/}, and the report reads from those locations rather than
+recomputing anything inline. \texttt{renv} pins the package versions; the
+unreleased \texttt{approxmatch} sources are vendored in
+\texttt{R/approxmatch/} along with their MIT license.
+
+\begin{thebibliography}{9}
+
+\bibitem{hernan2020}
+Hern\'an, M.~A., \& Robins, J.~M. (2020).
+\textit{Causal Inference: What If}.
+Boca Raton: Chapman \& Hall/CRC.
+
+\bibitem{rosenbaum2002}
+Rosenbaum, P.~R. (2002).
+\textit{Observational Studies}, 2nd ed.
+New York: Springer.
+
+\bibitem{rosenbaum2010}
+Rosenbaum, P.~R. (2010).
+\textit{Design of Observational Studies}.
+New York: Springer.
+
+\bibitem{stuart2010}
+Stuart, E.~A. (2010).
+Matching methods for causal inference: a review and a look forward.
+\textit{Statistical Science}, 25(1), 1--21.
+
+\bibitem{karmakar2019}
+Karmakar, B., Small, D.~S., \& Rosenbaum, P.~R. (2019).
+Using approximation algorithms to build evidence factors and related
+designs for observational studies.
+\textit{Journal of Computational and Graphical Statistics}, 28(3),
+698--709.
+
+\bibitem{ho2007}
+Ho, D.~E., Imai, K., King, G., \& Stuart, E.~A. (2007).
+Matching as nonparametric preprocessing for reducing model dependence in
+parametric causal inference.
+\textit{Political Analysis}, 15(3), 199--236.
+
+\end{thebibliography}
+
+\end{document}

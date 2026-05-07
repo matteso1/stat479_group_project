@@ -212,15 +212,15 @@ Section~\ref{sec:identification}.
 \toprule
 Covariate & SMD before & SMD after \\
 \midrule
-sex            & $\phantom{-}0.160$ & $\phantom{-}0.005$ \\
-age            & $-0.282$           & $-0.066$           \\
-race           & $\phantom{-}0.177$ & $\phantom{-}0.000$ \\
-education      & $-0.088$           & $-0.059$           \\
-smokeintensity & $\phantom{-}0.217$ & $\phantom{-}0.076$ \\
-smokeyrs       & $-0.159$           & $-0.010$           \\
-exercise       & $-0.104$           & $-0.003$           \\
-active         & $-0.089$           & $-0.061$           \\
-wt71           & $-0.133$           & $-0.072$           \\
+sex            & $\phantom{-}0.160$ & $\phantom{-}0.022$ \\
+age            & $-0.282$           & $-0.125$           \\
+race           & $\phantom{-}0.177$ & $\phantom{-}0.023$ \\
+education      & $-0.088$           & $-0.045$           \\
+smokeintensity & $\phantom{-}0.217$ & $\phantom{-}0.146$ \\
+smokeyrs       & $-0.159$           & $-0.053$           \\
+exercise       & $-0.104$           & $-0.046$           \\
+active         & $-0.089$           & $-0.063$           \\
+wt71           & $-0.133$           & $-0.097$           \\
 \bottomrule
 \end{tabular}
 \caption{Standardized mean differences (treated minus control, scaled by
@@ -231,23 +231,26 @@ the pre-match pooled SD) before and after matching.}
 Pre-match, four covariates exceed the conventional $|\text{SMD}| < 0.10$
 threshold (\texttt{sex}, \texttt{age}, \texttt{race},
 \texttt{smokeintensity}), and a fifth (\texttt{exercise}) sits right on
-the line. After matching, every covariate clears the threshold, with most
-landing well below $0.05$. The largest residual imbalance is on
-\texttt{smokeintensity}, where the post-match SMD is $0.076$, which is
-within tolerance but worth flagging.
+the line. After matching, most covariates move closer to zero, but
+\texttt{age} and \texttt{smokeintensity} remain slightly above the
+conventional threshold, at about $0.125$ and $0.146$ in absolute value.
+That is improved balance, not perfect balance, and it is the main reason
+we treat the sensitivity analysis as part of the substantive result rather
+than a decorative appendix.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.82\linewidth]{love_plot.png}
 \caption{Love plot: covariate imbalance before vs.\ after matching.
 The dashed lines mark the conventional $|\text{SMD}| = 0.1$ threshold.
-Every covariate moves inside the threshold after matching.}
+Most covariates move substantially toward zero after matching, though
+\texttt{age} and \texttt{smokeintensity} remain just outside the
+threshold.}
 \label{fig:love}
 \end{figure}
 
-By the conventional balance criterion, the matched sample looks like one
-that could plausibly have come out of a randomized trial on these nine
-covariates.
+The matched sample is materially better balanced than the raw data, but it
+does not fully eliminate measured imbalance on every covariate.
 
 \section{Treatment effect estimate}
 
@@ -275,7 +278,7 @@ Matched paired difference & $2.752$ & $0.478$ & $1.816$ & $3.687$ & $403$ \\
 \label{tab:ate}
 \end{table}
 
-So quitting smoking is associated with about $3.2$ kg (close to seven
+So quitting smoking is associated with about $2.75$ kg (close to six
 pounds) of additional weight gain over the eleven-year window, relative
 to the same person continuing to smoke. The 95\% interval excludes zero
 by a comfortable margin.
@@ -417,8 +420,7 @@ loading and confounder setup (\texttt{01}), propensity-score model
 estimate (\texttt{05}), and sensitivity (\texttt{06}). All intermediate
 products land under \texttt{data/derived/}, \texttt{figures/}, and
 \texttt{tables/}, and the report reads from those locations rather than
-recomputing anything inline. \texttt{renv} pins the package versions; the
-unreleased \texttt{approxmatch} sources are vendored in
+recomputing anything inline. The unreleased \texttt{approxmatch} sources are vendored in
 \texttt{R/approxmatch/} along with their MIT license.
 
 \begin{thebibliography}{9}

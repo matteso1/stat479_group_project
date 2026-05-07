@@ -67,5 +67,5 @@ matched_df  <- df[matched_ids, ]
 
 write.csv(matched_df, "data/derived/matched_df.csv", row.names = FALSE)
 
-cat("Matched pairs:", nrow(res$matches), "\n")
+cat("Matched sets:", nrow(res$matches), "\n")
 cat("Matched sample size:", nrow(matched_df), "\n")

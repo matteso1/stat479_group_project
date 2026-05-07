@@ -207,11 +207,12 @@ knitr::include_graphics(proot("figures/love_plot.png"))
 ```
 
 Pre-match, several covariates exceed the conventional |SMD| < 0.1 threshold
-(notably `age`, `smokeintensity`, `race`, and `sex`). After matching, all
-nine covariates are within |SMD| < 0.10 in absolute value, with most well
-below 0.05. By the conventional balance criterion, the matched design
-successfully approximates a randomized experiment on the measured
-covariates.
+(notably `age`, `smokeintensity`, `race`, and `sex`). After matching, most
+covariates improve materially, but `age` (about 0.125 in absolute value) and
+`smokeintensity` (about 0.146) remain slightly above the conventional 0.10
+cutoff. The 1:2 design substantially improves balance without eliminating all
+measured imbalance, so the causal interpretation still leans heavily on model
+choice and the sensitivity analysis.
 
 # Treatment Effect Estimate
 

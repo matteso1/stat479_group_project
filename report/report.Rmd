@@ -118,6 +118,20 @@ correlate with the outcome, because conditioning on a post-treatment
 variable can block a real causal pathway or open a collider path. This is
 the same logic Hernán and Robins apply in Chapter 12 of *What If*.
 
+The selection of confounders is based on variables that influence both the 
+likelihood of quitting smoking and weight change. Age and baseline weight 
+are important because metabolism and health behavior differ across individuals. 
+Smoking intensity and duration are also key, as heavier smokers may have different 
+quitting patterns and physiological responses after quitting.
+
+Lifestyle-related variables such as exercise and daily activity directly affect 
+weight and are also associated with healthier behaviors, including a higher probability 
+of quitting smoking. Education is included as a proxy for socioeconomic status, 
+which influences both health decisions and long-term outcomes.
+
+By controlling for these variables, we aim to reduce bias and make the treated and control groups more comparable.
+
+
 # Propensity Score Estimation
 
 We fit a logistic regression of $Z = \texttt{qsmk}$ on the nine confounders
@@ -218,6 +232,10 @@ substantially larger than the naive unadjusted difference, which is
 attenuated by the fact that quitters tend to be older and heavier-smoking at
 baseline (negatively correlated with weight change).
 
+In practical terms, an average weight gain of approximately 3 kilograms suggests that quitting smoking leads to a moderate increase in body weight over time. While this may appear to be a negative outcome, it is important to consider that quitting smoking provides substantial overall health benefits.
+
+The consistency of this effect across different matching strategies strengthens confidence in the results. Although the magnitude changes slightly under alternative designs, the direction remains positive, suggesting the finding is robust.
+
 # Identification Assumptions
 
 For the matched ATE to have a causal interpretation we need three
@@ -234,7 +252,8 @@ assumptions, two of which are untestable from the data alone.
    threats include household income (not in the matched set), partner
    smoking and partner quitting, dietary quality, psychological stress, and
    unmeasured health events between 1971 and 1982 that prompted both quitting
-   and weight change.
+   and weight change. This assumption cannot be directly tested, and if important
+   confounders are missing, the estimated treatment effect may still be biased.
 3. **Positivity / overlap** — $0 < P(Z = 1 \mid X) < 1$ across the covariate
    support. The estimated PS lies in $[0.04, 0.77]$, with adequate overlap
    in the bulk and some sparsity in the right tail. We did not need to trim.
@@ -263,6 +282,20 @@ assumptions, two of which are untestable from the data alone.
   measurement.
 - **Outcome window.** Weight change is measured at a single follow-up;
   longer-term trajectories may differ.
+- **Model dependence.** The results rely on the correct specification of the propensity 
+  score model. If the model is misspecified, the matching process may not fully balance 
+  covariates, which can bias the results.
+
+# Conclusion
+
+This project applies propensity-score matching to estimate the causal effect of smoking 
+cessation on weight change. By constructing comparable groups from observational data, 
+we approximate a randomized experiment and find that quitting smoking leads to an increase in weight.
+
+Although the results are consistent across different matching approaches, 
+they rely on assumptions about unmeasured confounding and model specification. 
+Overall, the findings demonstrate how matching methods can be used to estimate 
+causal effects in observational data.
 
 # References
 

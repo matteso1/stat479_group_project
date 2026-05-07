@@ -1,6 +1,6 @@
 # 05_estimate.R — ATE estimation on the matched sample.
 #
-# Reports the simple matched-pair difference-in-means with a paired SE / CI.
+# Reports the matched-sample difference-in-means with a paired-style SE / CI.
 #
 # Output:
 #   tables/ate_estimate.csv

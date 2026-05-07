@@ -2,7 +2,7 @@
 #
 # Follows the pattern in lecture10_rdemonstration.R:
 #   - construct a distance structure (Mahalanobis + propensity score)
-#   - run 1:1 nearest-neighbor matching via kwaymatching()
+#   - run 1:2 nearest-neighbor matching via kwaymatching()
 #
 # Output:
 #   data/derived/matches.rds     list returned by kwaymatching

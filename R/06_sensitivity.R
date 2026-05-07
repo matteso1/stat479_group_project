@@ -5,7 +5,7 @@
 #   (b) PS trimming to the [0.05, 0.95] interval before re-matching 1:1
 #
 # Both are reported as paired-style estimates so they can be compared head
-# to head with the primary 1:1 design from 03_match.R / 05_estimate.R.
+# to head with the primary 1:2 design from 03_match.R / 05_estimate.R.
 #
 # Output:
 #   tables/sensitivity.csv

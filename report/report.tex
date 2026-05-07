@@ -18,9 +18,17 @@
 \setlength{\parindent}{0pt}
 
 \title{Matching as Design: Constructing a Quasi-Experiment\\ from Observational Data}
-\author{Nils Matteson\\\small\texttt{nomatteson@wisc.edu}}
+\author{
+Anushka Dwivedi\\\small\texttt{ADWIVEDI6@wisc.edu}
+\and
+Hyunbin Jung\\\small\texttt{HJUNG89@wisc.edu}
+\and
+Pusti Jesrani\\\small\texttt{JESRANI@wisc.edu}
+\and
+Nils Matteson\\\small\texttt{NOMATTESON@wisc.edu}
+}
 \date{STAT 479 Group Project 1 \\ Spring 2026 \\[0.4em]
-\small\textit{Submitted as a group project; sole-author writeup. See
+\small\textit{Submitted as a group project. See
 \texttt{CONTRIBUTIONS.md} for the contribution record.}}
 
 \begin{document}
@@ -30,11 +38,11 @@
 \noindent
 We use propensity-score matching on the NHEFS public-use cohort to estimate
 the causal effect of quitting smoking on weight change between 1971 and
-1982. After 1:1 nearest-neighbor matching on a Mahalanobis-plus-propensity
+1982. After 1:2 nearest-neighbor matching on a Mahalanobis-plus-propensity
 distance, all nine measured confounders satisfy the conventional
 $|\mathrm{SMD}| < 0.10$ balance criterion, with most below $0.05$.
-The matched estimate is $\hat{\tau} \approx 3.20$ kg
-(95\% CI $[2.16,\,4.24]$), meaning quitters gained roughly three
+The matched estimate is $\hat{\tau} \approx 2.75$ kg
+(95\% CI $[1.82,\,3.69]$), meaning quitters gained roughly three
 kilograms more than they would have if they had kept smoking. The
 direction and magnitude line up with what Hern\'an and Robins report on
 the same data, and they hold up under a 1:2 matching design and under
@@ -68,18 +76,16 @@ The course rubric phrases the target as the average treatment effect (ATE),
 $\tau = \mathbb{E}[Y(1) - Y(0)]$, where $Y(1)$ is the weight change a
 respondent would experience if they quit and $Y(0)$ is the change they
 would experience if they kept smoking. We want to be transparent about a
-small mismatch between that target and the design we ran. A 1:1
-nearest-neighbor design that matches every treated unit to a control most
-naturally identifies the ATT, the average effect on the treated:
+small mismatch between that target and the design we ran. A strict 1:1
+nearest-neighbor design would most naturally identify the ATT, the average effect on the treated:
 $$
 \tau_{\text{ATT}}
 \;=\;
 \mathbb{E}\!\left[\,Y(1) - Y(0)\,\bigm|\,Z = 1\right].
 $$
-ATE and ATT coincide when the treatment effect is constant across the
-covariate space, and they tend to be close in practice when overlap is
-strong. We report $\hat\tau$ as a paired estimate on the matched sample
-and discuss both interpretations in Section~\ref{sec:identification}.
+Our primary 1:2 design does not map as cleanly to the ATT, but the same
+comparison helps frame the interpretation of the matched-sample estimate.
+We discuss both interpretations in Section~\ref{sec:identification}.
 
 \section{Data}
 
@@ -107,8 +113,9 @@ After dropping respondents with any missing values on the variables above,
 the analysis sample contains 1{,}566 individuals: 403 who quit (treated)
 and 1{,}163 who kept smoking (control). The unadjusted difference in mean
 weight change between the two groups is roughly $2.5$ kg, attenuated
-relative to the matched estimate because quitters skew older and heavier-
-smoking at baseline, and both correlate negatively with weight change.
+relative to the matched estimate because quitters skew older and have
+heavier smoking histories at baseline, and both correlate negatively with
+weight change.
 
 \section{Confounder selection}
 
@@ -176,7 +183,7 @@ control (continued).}
 
 \section{Matched design}
 
-We match every treated unit (quitter) to one control using a distance
+We match every treated unit (quitter) to two controls using a distance
 structure that combines two ingredients with equal weight:
 
 \begin{enumerate}[leftmargin=1.4em, itemsep=0.1em]
@@ -191,9 +198,9 @@ pipeline is self-contained. Internally, \texttt{kwaymatching} reduces the
 problem to a minimum-cost flow on a bipartite graph and solves it with
 the \texttt{rlemon} backend.
 
-The match returns 403 pairs, one for every treated respondent. Because
-matching is 1:1 and every treated unit finds a partner, the matched-pair
-estimand corresponds most cleanly to the ATT, as discussed in
+The match returns 403 matched sets, one for every treated respondent.
+Because matching is 1:2, the resulting estimate is best read as a
+matched-sample causal contrast rather than a pure ATT, as discussed in
 Section~\ref{sec:identification}.
 
 \section{Balance diagnostics}
@@ -244,7 +251,7 @@ covariates.
 
 \section{Treatment effect estimate}
 
-On the 403 matched pairs we compute the simple paired
+On the 403 matched sets we compute the simple treated-minus-average-control
 difference-in-means and a paired standard error,
 $$
 \hat\tau \;=\; \frac{1}{n}\sum_{i=1}^{n}\bigl(Y_i^{T} - Y_i^{C}\bigr),
@@ -260,7 +267,7 @@ differences. The result:
 \toprule
 Estimand & Estimate & SE & 95\% CI lower & 95\% CI upper & \# pairs \\
 \midrule
-Matched paired difference & $3.202$ & $0.530$ & $2.163$ & $4.242$ & $403$ \\
+Matched paired difference & $2.752$ & $0.478$ & $1.816$ & $3.687$ & $403$ \\
 \bottomrule
 \end{tabular}
 \caption{Matched-sample estimate of the effect of quitting on weight change
@@ -285,7 +292,7 @@ baseline, both of which are negatively associated with weight change.
 
 A point estimate from a single matched design can be misleading if the
 result depends on choices the analyst made. We re-ran the pipeline under
-two perturbations: (a) switching from 1:1 to 1:2 nearest-neighbor matching,
+two perturbations: (a) switching from 1:2 to 1:1 nearest-neighbor matching,
 and (b) trimming the propensity score to $[0.05,\,0.95]$ before re-matching
 1:1.
 
@@ -296,8 +303,8 @@ and (b) trimming the propensity score to $[0.05,\,0.95]$ before re-matching
 \toprule
 Design & $\hat\tau$ (kg) & SE & CI lower & CI upper & Notes \\
 \midrule
-1:1 NN matching (primary)        & $3.202$ & $0.530$ & $2.163$ & $4.242$ & \\
-1:2 NN matching                  & $2.752$ & $0.478$ & $1.816$ & $3.687$ & \\
+1:2 NN matching (primary)        & $2.752$ & $0.478$ & $1.816$ & $3.687$ & \\
+1:1 NN matching                  & $3.202$ & $0.530$ & $2.163$ & $4.242$ & \\
 1:1 NN, PS trimmed $[0.05,0.95]$ & $3.255$ & $0.536$ & $2.205$ & $4.306$ & dropped 2 units \\
 \bottomrule
 \end{tabular}
@@ -308,11 +315,11 @@ three-and-a-quarter kilograms.}
 \end{table}
 
 The 1:2 design borrows information from a second control per treated unit
-and pulls the estimate down slightly, while trimming the PS support
+and pulls the estimate down slightly relative to 1:1, while trimming the PS support
 barely moves it. Across all three designs the confidence intervals
 overlap heavily and none crosses zero. Whatever bias is left after the
 primary matching, it does not appear to be coming from idiosyncratic
-features of the 1:1 design or from the small number of observations near
+features of the 1:2 primary design or from the small number of observations near
 the edge of common support.
 
 \section{Identification assumptions}\label{sec:identification}

@@ -4,9 +4,7 @@
 #   tables/balance_table.csv
 #   figures/love_plot.png
 
-suppressPackageStartupMessages({
-  # approxmatch functions sourced below
-})
+suppressPackageStartupMessages({})
 
 # Source approxmatch functions
 for (f in c("multigrp_dist_struc.R", "kwaymatching.R", "nrbalancematch.R",

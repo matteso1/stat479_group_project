@@ -1,7 +1,7 @@
 ---
 title: "Matching as Design: Constructing a Quasi-Experiment from Observational Data"
 subtitle: "STAT 479 — Group Project 1, Spring 2026"
-author: "Nils Matteson (NOMATTESON@wisc.edu)"
+author: "Anushka Dwivedi, Hyunbin Jung, Pusti Jesrani, Nils Matteson"
 date: "`r format(Sys.Date(), '%B %d, %Y')`"
 output:
   html_document:
@@ -42,11 +42,11 @@ if they quit smoking and $Y(0)$ is the change they would experience if they
 kept smoking. A positive $\tau$ means quitting *causes* weight gain on
 average.
 
-A 1:1 nearest-neighbor design that matches every treated unit to a control
-most naturally identifies the ATT, the average effect on the treated. ATE
-and ATT coincide when treatment effects are constant across the covariate
-space and tend to be close in practice when overlap is strong; we discuss
-both interpretations in the *Identification Assumptions* section.
+Our primary 1:2 nearest-neighbor design does not map as cleanly to the ATT
+as strict 1:1 matching does, but it still targets a matched-sample causal
+contrast under the same ignorability and overlap assumptions. We discuss the
+ATE-versus-ATT interpretation explicitly in the *Identification Assumptions*
+section.
 
 # Data
 
@@ -157,7 +157,7 @@ A propensity-score trimming sensitivity check is reported in the
 
 # Matched Design
 
-We use **1:1 nearest-neighbor matching** with a distance structure that
+We use **1:2 nearest-neighbor matching** with a distance structure that
 combines (i) Mahalanobis distance on the numeric confounders and (ii) the
 estimated propensity score, weighted equally. This mirrors the workflow in
 the lecture-10 R demonstration, using the unreleased version of the
@@ -165,21 +165,22 @@ the lecture-10 R demonstration, using the unreleased version of the
 
 ```{r match-summary}
 matched <- read.csv(proot("data/derived/matched_df.csv"))
-n_pairs <- nrow(matched) / 2
+n_sets <- sum(matched$treat == 1)
 knitr::kable(
   data.frame(
-    Quantity = c("Matched pairs", "Total matched units",
+    Quantity = c("Matched sets", "Total matched units",
                  "Treated (quit) matched", "Control (continued) matched"),
-    Value    = c(n_pairs, nrow(matched),
+    Value    = c(n_sets, nrow(matched),
                  sum(matched$treat == 1), sum(matched$treat == 0))
   ),
   caption = "Matched-sample sizes."
 )
 ```
 
-Because every treated unit (quitter) finds a unique control match, the
-matched estimand is closer to the **ATT** than the ATE. Many groups conflate
-these in writing — we should be explicit about which we're claiming.
+Because each treated unit (quitter) is matched to up to two controls, the
+resulting estimate is best read as a matched-sample causal contrast rather
+than a pure ATT. Many writeups blur those distinctions; we address that
+explicitly in the assumptions section.
 
 ## Sensitivity to the matching design
 
@@ -206,7 +207,7 @@ knitr::include_graphics(proot("figures/love_plot.png"))
 ```
 
 Pre-match, several covariates exceed the conventional |SMD| < 0.1 threshold
-(notably `age`, `smokeintensity`, `race`, and `sex`). After 1:1 matching, all
+(notably `age`, `smokeintensity`, `race`, and `sex`). After matching, all
 nine covariates are within |SMD| < 0.10 in absolute value, with most well
 below 0.05. By the conventional balance criterion, the matched design
 successfully approximates a randomized experiment on the measured
@@ -219,8 +220,8 @@ ate <- read.csv(proot("tables/ate_estimate.csv"))
 knitr::kable(ate, digits = 3, caption = "Matched-sample ATE estimate.")
 ```
 
-The matched-pair point estimate is **$\hat\tau \approx 3.20$ kg** with 95%
-confidence interval $[2.16, 4.24]$ kg. Quitting smoking is associated with
+The primary matched-sample point estimate is **$\hat\tau \approx 2.75$ kg**
+with 95% confidence interval $[1.82, 3.69]$ kg. Quitting smoking is associated with
 roughly three kilograms (about 7 pounds) of additional weight gain over the
 1971–1982 window relative to the same person continuing to smoke. The
 confidence interval excludes zero by a comfortable margin.

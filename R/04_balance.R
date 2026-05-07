@@ -5,7 +5,6 @@
 #   figures/love_plot.png
 
 suppressPackageStartupMessages({
-  library(approxmatch)
 })
 
 df  <- read.csv("data/derived/analysis_ps.csv")

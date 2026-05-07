@@ -12,7 +12,6 @@
 
 suppressPackageStartupMessages({
   library(optmatch)
-  library(approxmatch)
   library(rlemon)
 })
 
